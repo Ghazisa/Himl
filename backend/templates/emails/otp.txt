@@ -1,0 +1,15 @@
+{% if is_reset %}Password reset code{% else %}Account verification code{% endif %}
+
+Hello {{ first_name }},
+
+Your Shahen verification code is: {{ code }}
+
+This code expires in {{ ttl_minutes }} minutes. If you did not request it, you can ignore this email.
+
+---
+
+مرحباً {{ first_name }}،
+
+رمز التحقق الخاص بك في شاحن هو: {{ code }}
+
+تنتهي صلاحية الرمز خلال {{ ttl_minutes }} دقائق. إذا لم تطلب هذا الرمز، يمكنك تجاهل هذه الرسالة.

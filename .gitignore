@@ -1,0 +1,25 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+db.sqlite3
+staticfiles/
+
+# Secrets
+.env
+
+# Node
+node_modules/
+dist/
+
+# OS
+.DS_Store
+
+# Test artefacts
+.playwright-mcp/
+*.png
+test-results/
+playwright-report/
+
+# Local Claude Code settings
+.claude/settings.local.json

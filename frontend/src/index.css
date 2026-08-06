@@ -1,0 +1,92 @@
+@import "tailwindcss";
+
+/*
+ * Design tokens from "كود المنصات — نظام التصميم الموحد للمملكة العربية السعودية" v1.0
+ * (Saudi Digital Government Authority, 17 Nov 2024).
+ *
+ * The palette draws on the national identity: SA green from the flag, gold from the
+ * embroidery of the Ardah banner, and the neutral ramp for surfaces and text.
+ */
+@theme {
+  /* SA — primary brand green */
+  --color-sa-25: #f7fdf9;
+  --color-sa-50: #f3fcf6;
+  --color-sa-100: #dff6e7;
+  --color-sa-200: #b8eacb;
+  --color-sa-300: #88d8ad;
+  --color-sa-400: #54c08a;
+  --color-sa-500: #25935f;
+  --color-sa-600: #1b8354;
+  --color-sa-700: #166a45;
+  --color-sa-800: #14573a;
+  --color-sa-900: #104631;
+  --color-sa-950: #092a1e;
+
+  /* Gold — accent */
+  --color-gold-25: #fffef7;
+  --color-gold-50: #fffef2;
+  --color-gold-100: #fffce6;
+  --color-gold-200: #fcf3bd;
+  --color-gold-300: #fae996;
+  --color-gold-400: #f7d54d;
+  --color-gold-500: #f5bd02;
+  --color-gold-600: #dba102;
+  --color-gold-700: #b87b02;
+  --color-gold-800: #945c01;
+  --color-gold-900: #6e3c00;
+  --color-gold-950: #472400;
+
+  /* Gray — surfaces and text */
+  --color-gray-25: #fcfcfd;
+  --color-gray-50: #f9fafb;
+  --color-gray-100: #f3f4f6;
+  --color-gray-200: #e5e7eb;
+  --color-gray-300: #d2d6db;
+  --color-gray-400: #9da4ae;
+  --color-gray-500: #6c737f;
+  --color-gray-600: #4d5761;
+  --color-gray-700: #384250;
+  --color-gray-800: #1f2a37;
+  --color-gray-900: #111927;
+  --color-gray-950: #0d121c;
+
+  --font-sans: "IBM Plex Sans Arabic", -apple-system, "Segoe UI", Tahoma, sans-serif;
+}
+
+body {
+  background: var(--color-gray-50);
+  color: var(--color-gray-900);
+  font-family: var(--font-sans);
+}
+
+/* WCAG 2.4.7 — visible focus indicator on every interactive element. */
+:where(a, button, input, select, textarea, [tabindex]):focus-visible {
+  outline: 3px solid var(--color-sa-600);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+@keyframes pulse-ring {
+  0% {
+    box-shadow: 0 0 0 0 rgb(37 147 95 / 45%);
+  }
+  70% {
+    box-shadow: 0 0 0 14px rgb(37 147 95 / 0%);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgb(37 147 95 / 0%);
+  }
+}
+
+.pulse-online {
+  animation: pulse-ring 2s cubic-bezier(0.66, 0, 0, 1) infinite;
+}
