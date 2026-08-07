@@ -1,43 +1,30 @@
+<div align="center">
+
 # حِمْل · Himl
 
-A bilingual (Arabic / English) digital freight matching platform connecting **shippers**
-(أصحاب البضائع) with **transporters** (أصحاب المركبات) across Saudi Arabia.
+**A bilingual freight matching platform connecting shippers with vehicle owners across Saudi Arabia.**
 
-Built to the **Saudi Unified Design System** — كود المنصات v1.0, published by the Digital
-Government Authority on 17 November 2024.
+Built to the Saudi Unified Design System — [كود المنصات v1.0](https://www.dga.gov.sa), Digital Government Authority.
 
-**[العربية بالأسفل ↓](#حِمْل--منصة-مطابقة-الشحن-الرقمية)**
+[![CI](https://github.com/Ghazisa/Himl/actions/workflows/ci.yml/badge.svg)](https://github.com/Ghazisa/Himl/actions/workflows/ci.yml)
 
----
-
-## Contents
-
-- [Status](#status)
-- [Quick start](#quick-start)
-- [Demo accounts](#demo-accounts)
-- [Email and OTP](#email-and-otp)
-- [Project layout](#project-layout)
-- [Core workflow](#core-workflow)
-- [API reference](#api-reference)
-- [Design system](#design-system)
-- [Frontend stack](#frontend-stack)
-- [Accessibility](#accessibility)
-- [Testing](#testing)
-- [Security](#security)
-- [Roadmap](#roadmap)
+</div>
 
 ---
 
-## Status
+## Overview
 
-Working MVP. Django REST API + React SPA, runs entirely on a local machine — no cloud
-services or paid accounts required.
+Himl connects **shippers** (أصحاب البضائع) who need cargo moved with **transporters**
+(أصحاب المركبات) who own vehicles. A shipper describes their cargo, filters the
+marketplace for a vehicle that can carry it, and sends a request. The transporter
+accepts or declines from a live feed, and accepting turns the request into a trip
+that both sides can track to delivery.
 
-| | |
-|---|---|
-| Backend tests | 27, all passing |
-| CI | GitHub Actions — backend tests, migration check, frontend lint and build |
-| Contrast | Every text/background pair measured; zero below WCAG AA |
+The driver experience is modelled on ride-hailing apps: a single prominent
+online/offline control, and a request feed that only polls while the driver is online.
+
+> **Status:** working MVP. Runs entirely on a local machine — no cloud services,
+> paid accounts, or API keys required.
 
 ---
 
@@ -45,14 +32,14 @@ services or paid accounts required.
 
 ### Prerequisites
 
-Both install into your home directory — no administrator rights needed.
+Both install into your home directory; no administrator rights needed.
 
-| Tool | Version | Location |
+| Tool | Version | Installed at |
 |---|---|---|
-| Python | 3.12 | [`uv`](https://docs.astral.sh/uv/) at `~/.local/bin/uv` |
-| Node | 22 | [`nvm`](https://github.com/nvm-sh/nvm) at `~/.nvm` |
+| Python | 3.12 (via [`uv`](https://docs.astral.sh/uv/)) | `~/.local/bin/uv` |
+| Node | 22 (via [`nvm`](https://github.com/nvm-sh/nvm)) | `~/.nvm` |
 
-If a fresh terminal cannot find them:
+If a new terminal cannot find them:
 
 ```bash
 export PATH="$HOME/.local/bin:$PATH" && source "$HOME/.nvm/nvm.sh"
@@ -74,100 +61,63 @@ cd backend && uv run python manage.py migrate && uv run python manage.py seed_de
 cd frontend && npm install && npm run dev
 ```
 
-### Test
+### Demo accounts
 
-```bash
-cd backend && uv run python manage.py test --settings=config.settings_test
-```
-
----
-
-## Demo accounts
-
-Created by `uv run python manage.py seed_demo`. Password for every account: `Himl2026`
+Created by `seed_demo`. Password for every account: `Himl2026`
 
 | Role | Email |
 |---|---|
 | Shipper | `shipper@demo.sa` |
 | Transporter | `turki@demo.sa` — also `faisal@`, `mohammed@`, `saleh@`, `abdulaziz@`, `nawaf@` |
 
-Django admin: <http://127.0.0.1:8000/admin/> — create a login with
-`uv run python manage.py createsuperuser`.
+Django admin is at `/admin/`; create a login with `uv run python manage.py createsuperuser`.
 
 ---
 
-## Email and OTP
-
-Sign-up sends a 4-digit code by email. **With no configuration the code is printed to the
-backend terminal** instead of being sent, so the whole flow is testable without secrets.
-
-To send real mail through Gmail, create `backend/.env`:
+## Project structure
 
 ```
-EMAIL_HOST_USER=you@gmail.com
-EMAIL_HOST_PASSWORD=your-16-character-app-password
-```
-
-Generate the app password at Google Account → Security → 2-Step Verification → App
-passwords. It is **not** your Gmail login password. `.env` is gitignored — never commit it.
-
-### PostgreSQL
-
-SQLite is the default and needs no setup. To move to PostgreSQL, set one variable in
-`backend/.env` — no code changes:
-
-```
-DATABASE_URL=postgres://user:password@localhost:5432/himl
-```
-
-Then run `uv run python manage.py migrate`. The `psycopg` driver is already installed.
-
----
-
-## Project layout
-
-```
-.github/workflows/ci.yml    Backend tests, migration check, frontend lint + build
-
 backend/
-  config/settings.py        Env-driven config (DB, email, JWT, CORS, throttling)
-  config/settings_test.py   Test overrides: no throttling, fast hasher, in-memory DB
-  apps/accounts/            User (email login, shipper/transporter role), profiles, OTP
-  apps/vehicles/            Vehicle listings + marketplace search filters
-  apps/shipments/           ShipmentRequest lifecycle + Trip tracking
-  templates/emails/         Bilingual OTP email
+  config/               settings, URLs, WSGI/ASGI, test settings
+  apps/accounts/        User (email login, role), profiles, OTP, auth views
+  apps/vehicles/        Vehicle listings, marketplace search filters
+  apps/shipments/       ShipmentRequest lifecycle, Trip tracking
+  templates/emails/     Bilingual OTP email
 
 frontend/src/
-  app/App.jsx               Routing, header, footer, route guards
-  components/ui/            Design system — Button, Field, Alert, Card, PageHeader…
-  features/auth/            AuthContext + login, signup, OTP, password reset
-  features/landing/         Public landing page
-  features/shipper/         Cargo form, vehicle search and filters, my requests
-  features/transporter/     Work mode, incoming requests, trips
-  features/profile/         Profile page
-  lib/api.js                Axios client, JWT attach + refresh-on-401
-  lib/i18n.js               All AR/EN strings; sets <html dir> on language change
-  lib/cn.js                 Tailwind class merging
+  app/                  App shell, route table, route guards
+  components/ui/        Design system — one file per primitive
+  components/layout/    Header, Footer, LanguageToggle
+  features/
+    auth/               Login, Signup, OTP, password reset, auth context
+    shipper/            Dashboard, my requests, cargo form, filters, vehicle card
+    transporter/        Driver console, my trips, work-mode card, trip card
+    profile/            Account and role profile
+    landing/            Public landing page
+  lib/                  API client, i18n, class merging
 ```
 
-**Backend** — each Django app owns its models, serializers, views and tests, so a new
-domain (payments, ratings) is added as a new app rather than by growing an existing one.
+Each feature owns its pages, sub-components, and API calls, so a change to one
+rarely reaches into another. Shared primitives live in `components/ui` and are
+imported through a single barrel:
 
-**Frontend** — organised by feature, not by file type. A feature folder holds its own
-pages, components and API calls, so everything you need to change one part of the product
-sits together. Anything shared lives in `components/ui` or `lib`, imported through the
-`@/` alias so a path never breaks when a file moves deeper.
+```js
+import { Button, Card, Field } from "@/components/ui";
+```
+
+The `@/` alias points at `src/`, so imports stay stable no matter how deep a
+feature folder nests.
 
 ---
 
-## Core workflow
+## How the matching flow works
 
-1. A shipper fills in the cargo form and searches. Filters narrow results by body type,
-   size class, payload capacity, city and availability.
-2. The shipper sends a request to a specific vehicle. **The API rejects cargo heavier than
-   that vehicle's payload capacity.**
-3. The request lands in the transporter's feed, which polls every 15 seconds while the
-   driver is online. They **accept** or **decline**.
+1. The shipper fills in cargo details and searches. Filters narrow by body type,
+   size class, payload capacity, city, and availability.
+2. The shipper sends a request to a specific vehicle. **The API rejects cargo
+   heavier than that vehicle's payload capacity** — the check is server-side.
+3. The request appears in the transporter's feed, which polls every 15 seconds
+   while they are online. They accept or decline.
 4. Accepting creates a **Trip**: `scheduled → in_transit → delivered`.
 
 ---
@@ -184,15 +134,12 @@ sits together. Anything shared lives in `components/ui` or `lib`, imported throu
 | POST | `/api/auth/password/reset/confirm/` | Set new password |
 | GET / PATCH | `/api/auth/me/`, `/api/auth/me/profile/` | Own account and profile |
 | POST | `/api/auth/me/online/` | Transporter work-mode toggle |
-| GET | `/api/vehicles/search/` | Marketplace listings (shipper) |
-| CRUD | `/api/vehicles/mine/` | Own fleet (transporter) |
+| GET | `/api/vehicles/search/` | Marketplace listings |
+| CRUD | `/api/vehicles/mine/` | Own fleet |
 | POST | `/api/requests/` | Send shipment request |
-| GET | `/api/requests/incoming/` | Transporter feed |
-| POST | `/api/requests/{id}/accept⎪decline⎪cancel/` | Respond |
-| GET | `/api/trips/` · POST `/api/trips/{id}/set_status/` | Trip tracking |
-
-Logging in with an unverified account returns **403** with `verification_required: true`
-in the body; the client keys off that flag rather than the status code.
+| GET | `/api/requests/incoming/` | Transporter's live feed |
+| POST | `/api/requests/{id}/accept·decline·cancel/` | Respond to a request |
+| GET · POST | `/api/trips/` · `/api/trips/{id}/set_status/` | Trip tracking |
 
 ---
 
@@ -203,29 +150,33 @@ Colour, typography and layout follow **كود المنصات v1.0**.
 **Typeface** — IBM Plex Sans Arabic, the system's official font, self-hosted via
 `@fontsource` so rendering never depends on an external CDN.
 
-**Colour** — the official SA green, Gold and Gray ramps are declared as design tokens in
-`frontend/src/index.css` using the exact hex values from the guide. The palette derives
-from the national identity: green from the flag, gold from the embroidery of the Ardah
-banner, near-black from the bisht.
+**Colour** — the official ramps are declared as design tokens in
+`frontend/src/index.css` using the exact values from the guide. The palette comes
+from the national identity: green from the flag, gold from the embroidery of the
+Ardah banner, near-black from the bisht.
 
-| Token | Role | Hex |
+| Token | Role | Value |
 |---|---|---|
 | `sa-700` | Primary actions | `#166A45` |
 | `gold-500` | Accent, highlights | `#F5BD02` |
 | `gray-950` | Page headers, footer | `#0D121C` |
 
-Component variants live in `ui.jsx` as `cva` definitions, so a colour is defined once and
-every screen inherits it.
+Every button, badge and alert colour is defined once as a
+[`cva`](https://cva.style) variant, so a new colour cannot drift into a page by
+accident.
 
 ---
 
-## Frontend stack
+## Stack
 
 | Package | Why |
 |---|---|
-| `class-variance-authority` | Component variants in one place — keeps colour and spacing consistent |
-| `clsx` + `tailwind-merge` | Predictable class merging; later classes reliably win |
-| `@tanstack/react-query` | Server-state caching, refetching, and the driver feed's live polling |
+| Django + DRF | Batteries-included API, admin panel, migrations |
+| React + Vite | SPA with fast HMR |
+| Tailwind CSS | Utility styling with logical properties for RTL |
+| `class-variance-authority` | Component variants defined in one place |
+| `clsx` + `tailwind-merge` | Predictable class merging |
+| `@tanstack/react-query` | Server-state caching, invalidation, driver-feed polling |
 | `sonner` | Toast notifications |
 | `lucide-react` | Icon set |
 | `@fontsource/ibm-plex-sans-arabic` | Self-hosted official typeface |
@@ -234,225 +185,226 @@ every screen inherits it.
 
 ## Accessibility
 
-WCAG 2.1 AA is the conformance target named by the design system.
+WCAG 2.1 AA is the target named by the design system.
 
-- **Direction** — `<html dir>` and `lang` follow the active language; layout uses CSS
-  logical properties so it mirrors rather than being hand-flipped. The OTP field stays LTR
-  in both languages, and city pairs use `<bdi>` with explicit from/to labels so mixed
-  Arabic/Latin text never reorders confusingly.
+- **Direction** — `<html dir>` and `lang` follow the active language; layout uses
+  CSS logical properties, so it mirrors rather than being hand-flipped.
+- **Bidirectional text** — the OTP field stays LTR in both languages, and city
+  pairs use `<bdi>` with explicit from/to labels so mixed Arabic/Latin names
+  never reorder into a misleading direction.
 - **Forms** — every input has a real `<label>`; hints and errors link via
-  `aria-describedby`; invalid fields carry `aria-invalid`; grouped controls use
-  `<fieldset>` / `<legend>`.
-- **Feedback** — errors announce via `role="alert"`, status via `aria-live="polite"`.
-- **Keyboard** — visible 3px focus ring on every interactive element, plus a
-  skip-to-content link as the first tab stop.
+  `aria-describedby`; invalid fields carry `aria-invalid`.
+- **Feedback** — errors announce via `role="alert"`, status via `aria-live`.
+- **Keyboard** — visible focus ring everywhere, skip-to-content as first tab stop.
 - **Contrast** — every text/background pair measured programmatically; zero below AA.
 - **Motion** — animations respect `prefers-reduced-motion`.
-- **Responsive** — mobile-first; verified at 375px with no horizontal scroll.
 
 ---
 
 ## Testing
 
-**Backend — 27 automated tests** (`apps/accounts/tests.py`, `apps/shipments/tests.py`):
+```bash
+cd backend && uv run python manage.py test --settings=config.settings_test
+cd frontend && npm run lint && npm run build
+```
 
-- Password policy enforced server-side, not just in the UI
-- OTP hashed at rest, wrong codes rejected, unverified login refused
-- Login by email or phone; identical errors for unknown account and wrong password
-- Profile read/patch and work-mode toggle (guards a real past regression)
-- Capacity guard: cargo heavier than the vehicle is rejected
-- Object-level ownership: another driver cannot accept someone else's request
+27 backend tests cover the password policy, OTP lifecycle, authentication,
+capacity validation, and object-level permissions. CI runs both suites plus a
+missing-migration check on every push and pull request.
 
-**Frontend** — the end-to-end flow has been exercised with Playwright: sign-up → OTP →
-role redirect, cargo validation, filtering and filter reset, capacity rejection, request
-sent, accept, trip progression, logout, Arabic RTL, and a 375px mobile layout.
+The end-to-end flow has also been exercised with Playwright: sign-up → OTP →
+role-based redirect, filtering and filter reset, capacity rejection, request →
+accept → trip status advance, sign-out, Arabic RTL, and a 375 px mobile layout.
+
+---
+
+## Configuration
+
+Everything is environment-driven. Copy `backend/.env.example` to `backend/.env`.
+
+**Email / OTP** — with no configuration, codes print to the backend terminal, so
+the flow is fully testable without secrets. To send real mail through Gmail:
+
+```
+EMAIL_HOST_USER=you@gmail.com
+EMAIL_HOST_PASSWORD=your-16-character-app-password
+```
+
+Generate the app password at Google Account → Security → 2-Step Verification →
+App passwords. It is **not** your Gmail login password. `.env` is gitignored.
+
+**Database** — SQLite by default. To use PostgreSQL, set one variable; no code
+changes are needed:
+
+```
+DATABASE_URL=postgres://user:password@localhost:5432/himl
+```
 
 ---
 
 ## Security
 
-- Passwords hashed by Django (PBKDF2); the policy is enforced server-side.
-- OTPs are **hashed at rest**, single-use, expire in 10 minutes, capped at 5 attempts.
-- OTP and login endpoints are rate-limited (`THROTTLE_OTP`, `THROTTLE_LOGIN`).
-- Login errors are deliberately generic, and password-reset responses are identical
-  whether or not the account exists, so neither reveals which emails are registered.
+- Passwords hashed with PBKDF2; the policy is enforced server-side, not only in the UI.
+- OTPs are hashed at rest, single-use, expire in 10 minutes, capped at 5 attempts.
+- OTP and login endpoints are rate-limited.
+- Login errors are generic and password-reset responses are identical whether or
+  not the account exists, so neither reveals which emails are registered.
 - Marketplace listings hide plate numbers and carrier contact details.
-- Object-level checks on every accept / decline / cancel.
-- Production hardening (HSTS, secure cookies, SSL redirect) activates when
-  `DJANGO_DEBUG=False`.
-
-> Set `DJANGO_SECRET_KEY` in the environment before deploying. The bundled default is a
-> development placeholder.
+- Object-level checks on every accept, decline and cancel.
+- HSTS, secure cookies and SSL redirect activate when `DJANGO_DEBUG=False`.
 
 ---
 
 ## Roadmap
 
 - `react-hook-form` + `zod` for client-side validation before submit
-- Migrate the shipper and profile pages to React Query (still manual `useState`/`useEffect`)
 - Map-based pickup and drop-off selection instead of free-text cities
 - WebSocket push for the driver feed in place of polling
 - Ratings and payment settlement after delivery
+- Vehicle management UI for transporters (API already exists)
 
 ---
 
-## License
+## Licence
 
-Prototype — not yet licensed for production use.
+All rights reserved — see [LICENSE](LICENSE). Replace it with MIT or Apache-2.0
+if you decide to open-source the project.
 
 ---
 ---
 
-<div dir="rtl" lang="ar">
+<div align="right" dir="rtl">
 
-# حِمْل · منصة مطابقة الشحن الرقمية
+# حِمْل · Himl
 
-منصة رقمية ثنائية اللغة (عربي / إنجليزي) تربط **أصحاب البضائع** بـ**أصحاب المركبات** في
-المملكة العربية السعودية.
+**منصة رقمية ثنائية اللغة لمطابقة الشحن، تربط أصحاب البضائع بأصحاب المركبات في المملكة العربية السعودية.**
 
-مبنية وفق **نظام التصميم الموحد للمملكة العربية السعودية** — كود المنصات الإصدار ١٫٠،
-الصادر عن هيئة الحكومة الرقمية في ١٧ نوفمبر ٢٠٢٤.
+مبنية وفق نظام التصميم الموحد — كود المنصات ١.٠، الصادر عن هيئة الحكومة الرقمية.
 
-## الحالة
+---
 
-نموذج أولي عامل. واجهة برمجية بـ Django REST مع تطبيق React، يعمل بالكامل على جهازك
-المحلي دون أي خدمات سحابية أو حسابات مدفوعة.
+## نظرة عامة
 
-| | |
-|---|---|
-| اختبارات الواجهة الخلفية | ٢٧ اختباراً، جميعها ناجحة |
-| التكامل المستمر | GitHub Actions — الاختبارات، فحص الترحيلات، بناء الواجهة |
-| تباين الألوان | كل تركيبة لونية مقاسة؛ صفر مخالفة لمعيار WCAG AA |
+يربط **حِمْل** أصحاب البضائع الذين يحتاجون نقل شحناتهم بأصحاب المركبات. يصف صاحب
+البضاعة شحنته، ويصفّي السوق بحثاً عن مركبة قادرة على نقلها، ثم يرسل طلباً. يقبل
+الناقل الطلب أو يرفضه من قائمة مباشرة، وعند القبول يتحول الطلب إلى رحلة يتابعها
+الطرفان حتى التسليم.
+
+صُمّمت واجهة الناقل على غرار تطبيقات النقل الذكي: زر واحد بارز للاتصال والانفصال،
+وقائمة طلبات لا تتحدث تلقائياً إلا أثناء اتصال الناقل.
+
+> **الحالة:** نموذج أولي عامل. يعمل بالكامل على جهاز محلي — دون خدمات سحابية أو
+> حسابات مدفوعة أو مفاتيح API.
+
+---
 
 ## التشغيل السريع
 
 ### المتطلبات
 
-كلاهما يُثبَّت في مجلدك الشخصي — دون صلاحيات إدارية.
+كلاهما يُثبَّت في مجلد المستخدم دون صلاحيات إدارية.
 
-| الأداة | الإصدار | المسار |
+| الأداة | الإصدار | مكان التثبيت |
 |---|---|---|
-| Python | ٣٫١٢ | `uv` في `~/.local/bin/uv` |
-| Node | ٢٢ | `nvm` في `~/.nvm` |
-
-إذا لم تجدهما الطرفية الجديدة:
-
-```bash
-export PATH="$HOME/.local/bin:$PATH" && source "$HOME/.nvm/nvm.sh"
-```
+| Python | ٣.١٢ (عبر `uv`) | `~/.local/bin/uv` |
+| Node | ٢٢ (عبر `nvm`) | `~/.nvm` |
 
 ### التشغيل
 
-طرفيتان.
+نافذتان طرفيتان — الخادم الخلفي على المنفذ ٨٠٠٠، والواجهة على ٥١٧٣. الأوامر
+مذكورة في القسم الإنجليزي أعلاه.
 
-**الواجهة الخلفية** ← http://127.0.0.1:8000
+### حسابات تجريبية
 
-```bash
-cd backend && uv run python manage.py migrate && uv run python manage.py seed_demo && uv run python manage.py runserver
-```
+كلمة المرور لجميع الحسابات: `Himl2026`
 
-**الواجهة الأمامية** ← http://localhost:5173
-
-```bash
-cd frontend && npm install && npm run dev
-```
-
-### الاختبارات
-
-```bash
-cd backend && uv run python manage.py test --settings=config.settings_test
-```
-
-## الحسابات التجريبية
-
-يُنشئها الأمر `seed_demo`. كلمة المرور لجميع الحسابات: `Himl2026`
-
-| الدور | البريد الإلكتروني |
+| الدور | البريد |
 |---|---|
 | صاحب بضاعة | `shipper@demo.sa` |
-| صاحب مركبة | `turki@demo.sa` — وكذلك `faisal@` و`mohammed@` و`saleh@` و`abdulaziz@` و`nawaf@` |
+| صاحب مركبة | `turki@demo.sa` وغيره |
 
-## البريد ورمز التحقق
-
-يرسل التسجيل رمزاً من ٤ أرقام بالبريد. **بدون أي إعداد يُطبع الرمز في طرفية الخادم**
-بدل إرساله، فيمكن اختبار المسار كاملاً دون أسرار.
-
-لإرسال بريد حقيقي عبر Gmail، أنشئ ملف `backend/.env`:
-
-```
-EMAIL_HOST_USER=you@gmail.com
-EMAIL_HOST_PASSWORD=كلمة-مرور-التطبيق-المكونة-من-١٦-حرفاً
-```
-
-كلمة مرور التطبيق تُنشأ من: حساب Google ← الأمان ← التحقق بخطوتين ← كلمات مرور
-التطبيقات. وهي **ليست** كلمة مرور بريدك. الملف `.env` مستثنى من Git — لا ترفعه أبداً.
+---
 
 ## بنية المشروع
 
-كل تطبيق في Django يملك نماذجه ومسلسلاته وعروضه واختباراته، فإضافة مجال جديد (المدفوعات،
-التقييمات) تكون بإنشاء تطبيق جديد بدل تضخيم تطبيق قائم.
+الواجهة مقسّمة حسب **الميزات** لا حسب نوع الملف، وهو ما يجعل التعديل والتوسّع أسهل
+مع نمو المشروع:
 
-## سير العمل الأساسي
+- `app/` — هيكل التطبيق، جدول المسارات، وحُرّاس الصلاحيات
+- `components/ui/` — نظام التصميم، ملف لكل عنصر
+- `components/layout/` — الترويسة والتذييل ومبدّل اللغة
+- `features/` — كل ميزة تملك صفحاتها ومكوّناتها ونداءات الـAPI الخاصة بها
+- `lib/` — عميل الـAPI، الترجمة، ودمج الأصناف
 
-١. يعبّئ صاحب البضاعة نموذج الشحنة ويبحث، ثم يصفّي النتائج حسب نوع المركبة وحجمها
-وحمولتها والمدينة والتوفر.
+في الخلفية، كل تطبيق Django مستقل: `accounts` للحسابات، `vehicles` للمركبات،
+`shipments` للطلبات والرحلات.
 
-٢. يرسل طلباً لمركبة محددة. **ترفض الواجهة البرمجية أي بضاعة أثقل من حمولة المركبة.**
+---
 
-٣. يصل الطلب إلى قائمة الناقل، التي تُحدَّث كل ١٥ ثانية أثناء اتصاله. فيقبل أو يرفض.
+## سير العمل
 
-٤. القبول يُنشئ **رحلة**: `مجدولة ← قيد النقل ← تم التسليم`.
+١. يُدخل صاحب البضاعة تفاصيل شحنته ويبحث، مع إمكانية التصفية حسب نوع المركبة
+وحجمها وحمولتها والمدينة والتوفّر.
+
+٢. يرسل طلباً لمركبة محددة. **يرفض الخادم أي شحنة تتجاوز حمولة المركبة** — والتحقق
+يتم في الخلفية لا في المتصفح فقط.
+
+٣. يظهر الطلب في قائمة الناقل، التي تتحدث كل ١٥ ثانية أثناء اتصاله، فيقبل أو يرفض.
+
+٤. عند القبول تُنشأ **رحلة**: مجدولة ← قيد النقل ← تم التسليم.
+
+---
 
 ## نظام التصميم
 
-**الخط** — IBM Plex Sans Arabic، الخط الرسمي للنظام، مستضاف محلياً حتى لا يعتمد العرض
-على أي مصدر خارجي.
+الألوان والخطوط والتخطيط تتبع **كود المنصات ١.٠**:
 
-**الألوان** — تدرجات SA الخضراء والذهبية والرمادية الرسمية معرّفة كرموز تصميم بقيم مطابقة
-للدليل. اللوحة مستمدة من الهوية الوطنية: الأخضر من العلم، والذهبي من تطريز بيرق العرضة،
-والأسود من البشت.
+- **الخط:** IBM Plex Sans Arabic، الخط الرسمي، مستضاف محلياً داخل المشروع فلا
+  يعتمد على أي مصدر خارجي.
+- **الألوان:** مستوحاة من الهوية الوطنية — الأخضر من العلم، والذهبي من تطريز بيرق
+  العرضة، والأسود من البشت.
+- كل لون معرَّف مرة واحدة فقط، فلا يمكن أن يتسرّب لون مخالف إلى صفحة بالخطأ.
 
-| الرمز | الاستخدام | القيمة |
-|---|---|---|
-| `sa-700` | الأزرار والإجراءات | `#166A45` |
-| `gold-500` | التمييز واللمسات | `#F5BD02` |
-| `gray-950` | ترويسات الصفحات والتذييل | `#0D121C` |
+---
 
 ## إمكانية الوصول
 
-معيار WCAG 2.1 AA هو المستهدف كما ينص عليه الدليل.
+المعيار المستهدف هو WCAG 2.1 AA:
 
-- **الاتجاه** — `dir` و`lang` يتبعان اللغة النشطة، والتخطيط يستخدم الخصائص المنطقية في
-  CSS فينعكس تلقائياً. حقل رمز التحقق يبقى من اليسار لليمين في اللغتين، وأزواج المدن
-  تستخدم `<bdi>` مع تسميتَي "من" و"إلى" حتى لا ينقلب ترتيب النص المختلط.
-- **النماذج** — لكل حقل تسمية حقيقية، والتلميحات والأخطاء مرتبطة بـ`aria-describedby`.
-- **التنبيهات** — الأخطاء تُعلَن عبر `role="alert"` والحالة عبر `aria-live`.
-- **لوحة المفاتيح** — إطار تركيز واضح بسماكة ٣ بكسل، ورابط "تخطَّ إلى المحتوى" كأول عنصر.
-- **الحركة** — تحترم إعداد `prefers-reduced-motion`.
-- **الاستجابة** — مصممة للجوال أولاً، ومختبرة عند عرض ٣٧٥ بكسل دون تمرير أفقي.
+- اتجاه الصفحة ولغتها يتغيّران مع اللغة، والتخطيط ينعكس تلقائياً
+- رمز التحقق يبقى من اليسار لليمين في اللغتين
+- أسماء المدن معزولة بـ`<bdi>` مع تسميات صريحة، فلا تنقلب في العربية
+- لكل حقل تسمية حقيقية، والأخطاء مرتبطة به برمجياً
+- مؤشر تركيز واضح، ورابط تخطٍّ للمحتوى كأول عنصر
+- جميع تباينات الألوان مقيسة برمجياً، ولا يوجد أي تباين دون الحد المطلوب
+
+---
+
+## الاختبارات
+
+٢٧ اختباراً في الخلفية تغطي سياسة كلمة المرور، ودورة حياة رمز التحقق، والمصادقة،
+والتحقق من الحمولة، وصلاحيات الوصول. تعمل جميعها تلقائياً عبر GitHub Actions مع كل
+تعديل، إضافة إلى فحص الترحيلات الناقصة وبناء الواجهة.
+
+كما اختُبر التدفق الكامل عبر Playwright: التسجيل، رمز التحقق، التوجيه حسب الدور،
+التصفية وإعادة الضبط، رفض الحمولة الزائدة، الطلب والقبول وتقدّم الرحلة، تسجيل
+الخروج، والعرض العربي، وتخطيط الجوال.
+
+---
 
 ## الأمان
 
-- كلمات المرور مشفّرة بـ PBKDF2، والسياسة مفروضة من الخادم لا من الواجهة فقط.
-- رموز التحقق **مشفّرة عند التخزين**، تُستخدم مرة واحدة، تنتهي خلال ١٠ دقائق، وبحد أقصى
-  ٥ محاولات.
-- حدود معدل على نقاط التحقق وتسجيل الدخول.
-- رسائل الخطأ موحّدة عمداً، فلا تكشف ما إذا كان البريد مسجّلاً.
-- قوائم السوق تخفي أرقام اللوحات وبيانات التواصل.
-- تحقق من الملكية على مستوى السجل في كل قبول أو رفض أو إلغاء.
+- كلمات المرور مشفّرة، والسياسة مطبَّقة في الخادم لا في الواجهة فقط
+- رموز التحقق مشفّرة ولا تُستخدم إلا مرة واحدة، وتنتهي خلال ١٠ دقائق
+- تحديد معدل الطلبات على نقاط الدخول والتحقق
+- رسائل الخطأ عامة، فلا تكشف أي بريد مسجّل في النظام
+- أرقام اللوحات وبيانات التواصل مخفية عن قوائم السوق
+- تحقق من الملكية عند كل قبول أو رفض أو إلغاء
 
-> اضبط `DJANGO_SECRET_KEY` في البيئة قبل أي نشر. القيمة المضمّنة للتطوير فقط.
-
-## خارطة الطريق
-
-- `react-hook-form` و`zod` للتحقق من النماذج قبل الإرسال
-- نقل صفحتَي صاحب البضاعة والملف الشخصي إلى React Query
-- اختيار مواقع التحميل والتسليم من خريطة بدل النص الحر
-- دفع لحظي عبر WebSocket بدل الاستطلاع الدوري
-- التقييمات وتسوية المدفوعات بعد التسليم
+---
 
 ## الترخيص
 
-نموذج أولي — غير مرخّص للاستخدام الإنتاجي بعد.
+جميع الحقوق محفوظة — انظر ملف [LICENSE](LICENSE).
 
 </div>
