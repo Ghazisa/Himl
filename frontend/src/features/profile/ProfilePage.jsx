@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import api, { readErrors } from "../api";
-import { useAuth } from "../auth";
-import { Alert, Button, Card, Field, PageHeader, Spinner } from "../ui";
+import api, { readErrors } from "@/lib/api";
+import { useAuth } from "@/features/auth/AuthContext";
+import { Alert, Button, Card, Field, PageHeader, Spinner } from "@/components/ui";
 
-export default function Profile() {
+export function ProfilePage() {
   const { t } = useTranslation();
   const { user, setUser } = useAuth();
   const [personal, setPersonal] = useState(null);

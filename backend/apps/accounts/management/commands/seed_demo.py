@@ -59,9 +59,9 @@ class Command(BaseCommand):
                 "is_email_verified": True,
             },
         )
+        shipper.set_password(DEMO_PASSWORD)
+        shipper.save(update_fields=["password"])
         if created:
-            shipper.set_password(DEMO_PASSWORD)
-            shipper.save(update_fields=["password"])
             ShipperProfile.objects.create(
                 user=shipper, company_name="Fahad Trading Co.", city="Riyadh"
             )
@@ -78,9 +78,9 @@ class Command(BaseCommand):
                     "is_email_verified": True,
                 },
             )
+            user.set_password(DEMO_PASSWORD)
+            user.save(update_fields=["password"])
             if made:
-                user.set_password(DEMO_PASSWORD)
-                user.save(update_fields=["password"])
                 TransporterProfile.objects.create(
                     user=user,
                     city=city,

@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 const FEATURES = ["f1", "f2", "f3"];
 const STATS = ["vehicles", "cities", "response"];
 
-export default function Landing() {
+export function LandingPage() {
   const { t } = useTranslation();
 
   return (

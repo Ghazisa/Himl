@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
-import api, { tokenStore } from "./api";
+import api, { tokenStore } from "@/lib/api";
 
 const AuthContext = createContext(null);
 
