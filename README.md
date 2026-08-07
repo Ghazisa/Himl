@@ -1,88 +1,110 @@
-# Himl · حِمْل
+# حِمْل · Himl
 
-A bilingual (Arabic/English) digital freight matching platform connecting **shippers**
-(أصحاب البضائع) with **transporters** (أصحاب المركبات).
+A bilingual (Arabic / English) digital freight matching platform that connects
+**shippers** (أصحاب البضائع) with **transporters** (أصحاب المركبات) across Saudi Arabia.
 
-This is an MVP prototype: Django REST API + React SPA, fully working locally.
+Built to the **Saudi Unified Design System** — كود المنصات v1.0, published by the
+Digital Government Authority (17 Nov 2024).
+
+> Status: working MVP. Django REST API + React SPA, runs fully on a local machine
+> with no cloud services or paid accounts required.
 
 ---
 
-## Requirements
+## Table of contents
 
-Both were installed into your home directory during setup — no admin rights needed.
+- [Quick start](#quick-start)
+- [Demo accounts](#demo-accounts)
+- [Email / OTP configuration](#email--otp-configuration)
+- [Architecture](#architecture)
+- [Core workflow](#core-workflow)
+- [API reference](#api-reference)
+- [Design system compliance](#design-system-compliance)
+- [Frontend stack](#frontend-stack)
+- [Accessibility](#accessibility)
+- [Testing](#testing)
+- [Security](#security)
+- [Roadmap](#roadmap)
 
-| Tool | Version | Path |
+---
+
+## Quick start
+
+### Prerequisites
+
+Both tools install into your home directory — no administrator rights needed.
+
+| Tool | Version | Installed via |
 |---|---|---|
-| Python | 3.12 (via `uv`) | `~/.local/bin/uv` |
-| Node | 22 (via `nvm`) | `~/.nvm` |
+| Python | 3.12 | [`uv`](https://docs.astral.sh/uv/) at `~/.local/bin/uv` |
+| Node | 22 | [`nvm`](https://github.com/nvm-sh/nvm) at `~/.nvm` |
 
-If a new terminal cannot find them:
+If a fresh terminal cannot find them:
 
 ```bash
 export PATH="$HOME/.local/bin:$PATH" && source "$HOME/.nvm/nvm.sh"
 ```
 
----
-
-## Running the app
+### Run it
 
 Two terminals.
 
-**1 — Backend** (http://127.0.0.1:8000)
+**Terminal 1 — backend** → http://127.0.0.1:8000
 
 ```bash
-cd backend && uv run python manage.py runserver
+cd backend && uv run python manage.py migrate && uv run python manage.py seed_demo && uv run python manage.py runserver
 ```
 
-**2 — Frontend** (http://localhost:5173)
+**Terminal 2 — frontend** → http://localhost:5173
 
 ```bash
-cd frontend && npm run dev
+cd frontend && npm install && npm run dev
 ```
 
 Open <http://localhost:5173>.
 
-### Demo accounts
+---
 
-Seeded by `uv run python manage.py seed_demo`. Password for all: `Himl2026`
+## Demo accounts
+
+Created by `uv run python manage.py seed_demo`. Password for every account: `Himl2026`
 
 | Role | Email |
 |---|---|
 | Shipper | `shipper@demo.sa` |
-| Transporter | `turki@demo.sa` (and `faisal@`, `mohammed@`, `saleh@`, `abdulaziz@`, `nawaf@`) |
+| Transporter | `turki@demo.sa` — also `faisal@`, `mohammed@`, `saleh@`, `abdulaziz@`, `nawaf@` |
 
-Admin panel: <http://127.0.0.1:8000/admin/> — create a login with
+Django admin lives at <http://127.0.0.1:8000/admin/>; create a login with
 `uv run python manage.py createsuperuser`.
 
 ---
 
 ## Email / OTP configuration
 
-Signup sends a 4-digit code by email. **With no configuration, codes print to the backend
-terminal** instead of being sent — the flow is fully testable without secrets.
+Sign-up sends a 4-digit code by email. **With no configuration the code is printed to
+the backend terminal** instead of being sent, so the whole flow is testable without
+secrets.
 
-To send real email via Gmail, create `backend/.env`:
+To send real mail through Gmail, create `backend/.env`:
 
 ```
 EMAIL_HOST_USER=you@gmail.com
-EMAIL_HOST_PASSWORD=your-16-char-app-password
+EMAIL_HOST_PASSWORD=your-16-character-app-password
 ```
 
-The app password comes from Google Account → Security → 2-Step Verification → App
+Generate the app password at Google Account → Security → 2-Step Verification → App
 passwords. It is **not** your Gmail login password. `.env` is gitignored — never commit it.
 
----
+### Switching to PostgreSQL
 
-## Switching to PostgreSQL
-
-The app runs on SQLite by default with zero setup. To move to PostgreSQL, set one variable
-in `backend/.env` — no code changes:
+SQLite is the default and needs no setup. To move to PostgreSQL, set one variable in
+`backend/.env` — no code changes:
 
 ```
-DATABASE_URL=postgres://user:password@localhost:5432/shahen
+DATABASE_URL=postgres://user:password@localhost:5432/himl
 ```
 
-Then `uv run python manage.py migrate`. The `psycopg` driver is already installed.
+Then run `uv run python manage.py migrate`. The `psycopg` driver is already installed.
 
 ---
 
@@ -90,28 +112,36 @@ Then `uv run python manage.py migrate`. The `psycopg` driver is already installe
 
 ```
 backend/
-  config/settings.py       env-driven config (DB, email, JWT, CORS, throttling)
-  apps/accounts/           User (email login, shipper/transporter role), profiles, OTP
-  apps/vehicles/           Vehicle listings + marketplace search filters
-  apps/shipments/          ShipmentRequest lifecycle + Trip tracking
+  config/settings.py        env-driven config (DB, email, JWT, CORS, throttling)
+  apps/accounts/            User (email login, shipper/transporter role), profiles, OTP
+  apps/vehicles/            Vehicle listings + marketplace search filters
+  apps/shipments/           ShipmentRequest lifecycle + Trip tracking
+  templates/emails/         Bilingual OTP email
+
 frontend/src/
-  i18n.js                  all EN/AR strings; sets <html dir> on language change
-  api.js                   axios client, JWT attach + refresh-on-401
-  auth.jsx                 auth context, role-based home routing
-  ui.jsx                   accessible Field / Button / Alert / StatusBadge
-  pages/                   Landing, Auth, Shipper, Transporter, Profile
+  i18n.js                   all AR/EN strings; sets <html dir> on language change
+  api.js                    axios client, JWT attach + refresh-on-401
+  auth.jsx                  auth context, role-based home routing
+  ui.jsx                    design system — Button/Field/Alert/Card/PageHeader/…
+  lib/cn.js                 Tailwind class merging
+  pages/                    Landing, Auth, Shipper, Transporter, Profile
 ```
 
-### Core workflow
+---
 
-1. Shipper fills the cargo form and searches; filters narrow by body type, size class,
-   payload capacity, city, and availability.
-2. Shipper sends a request to a specific vehicle. The API rejects cargo heavier than that
-   vehicle's payload capacity.
-3. The request lands in the transporter's live feed. They **accept** or **decline**.
-4. Accepting creates a **Trip** — `scheduled → in_transit → delivered`.
+## Core workflow
 
-### API reference
+1. A shipper fills in the cargo form and searches. Filters narrow results by body
+   type, size class, payload capacity, city, and availability.
+2. The shipper sends a request to a specific vehicle. **The API rejects cargo heavier
+   than that vehicle's payload capacity.**
+3. The request lands in the transporter's live feed, which polls every 15 seconds
+   while the driver is online. They **accept** or **decline**.
+4. Accepting creates a **Trip**: `scheduled → in_transit → delivered`.
+
+---
+
+## API reference
 
 | Method | Endpoint | Purpose |
 |---|---|---|
@@ -121,81 +151,112 @@ frontend/src/
 | POST | `/api/auth/login/` | Email **or** phone + password |
 | POST | `/api/auth/password/reset/` | Request reset code |
 | POST | `/api/auth/password/reset/confirm/` | Set new password |
-| GET/PATCH | `/api/auth/me/`, `/api/auth/me/profile/` | Own account & profile |
+| GET / PATCH | `/api/auth/me/`, `/api/auth/me/profile/` | Own account & profile |
 | POST | `/api/auth/me/online/` | Transporter work-mode toggle |
 | GET | `/api/vehicles/search/` | Marketplace listings (shipper) |
 | CRUD | `/api/vehicles/mine/` | Own fleet (transporter) |
 | POST | `/api/requests/` | Send shipment request |
 | GET | `/api/requests/incoming/` | Transporter's live feed |
-| POST | `/api/requests/{id}/accept\|decline\|cancel/` | Respond |
-| GET | `/api/trips/`, POST `/api/trips/{id}/set_status/` | Trip tracking |
+| POST | `/api/requests/{id}/accept⎪decline⎪cancel/` | Respond |
+| GET | `/api/trips/` · POST `/api/trips/{id}/set_status/` | Trip tracking |
 
 ---
 
 ## Design system compliance
 
-Built against **كود المنصات — نظام التصميم الموحد للمملكة العربية السعودية v1.0**
-(Saudi Digital Government Authority, 17 Nov 2024).
+Colour, typography and layout follow **كود المنصات v1.0**.
 
-- **Typeface** — IBM Plex Sans Arabic, the system's official font (weights 400/500/600/700).
-- **Colour** — the official SA green, Gold and Gray ramps are defined as design tokens in
-  `frontend/src/index.css`, with the exact hex values from the guide. SA green is the primary
-  brand colour; gold is the accent. The palette derives from the national identity: green from
-  the flag, gold from the embroidery of the Ardah banner.
-- **Layout** — white header with a green rule, white cards on a gray surface, green primary
-  buttons, and a dark green footer, following the page templates in the guide.
+**Typeface** — IBM Plex Sans Arabic, the system's official font, self-hosted via
+`@fontsource` so rendering never depends on an external CDN.
 
-Accessibility follows WCAG, which the guide names as its conformance target:
+**Colour** — the official SA green, Gold and Gray ramps are declared as design tokens
+in `frontend/src/index.css` using the exact hex values from the guide. The palette
+derives from the national identity: green from the flag, gold from the embroidery of
+the Ardah banner, near-black from the bisht.
 
-- **Direction** — `<html dir>` and `lang` switch with the language; layout uses CSS logical
-  properties so it mirrors rather than being hand-flipped. The OTP field stays LTR in both
-  languages, and city pairs use `<bdi>` with explicit from/to labels so mixed Arabic/Latin
-  text never reorders confusingly.
-- **Forms** — every input has a real `<label>`; hints and errors are linked via
-  `aria-describedby`; invalid fields carry `aria-invalid`; grouped controls use
-  `<fieldset>/<legend>`.
-- **Feedback** — errors announce through `role="alert"`, status through `aria-live="polite"`.
-- **Keyboard** — visible 3px focus ring on all interactive elements, plus a skip-to-content
-  link as the first tab stop.
-- **Motion** — animations respect `prefers-reduced-motion`.
-- **Responsive** — mobile-first; single column on phones, multi-column from `sm`/`lg`.
+| Token | Role | Example |
+|---|---|---|
+| `sa-700` | Primary actions | `#166A45` |
+| `gold-500` | Accent, highlights | `#F5BD02` |
+| `gray-950` | Page headers, footer | `#0D121C` |
 
-> Partially applied: the landing page uses the system's tokens, typeface and footer, but not
-> yet the full gov template structure (hero image band, statistics row, partners section).
-
-## Transporter home screen
-
-Modelled on the Uber driver app, since the matching flow is analogous:
-
-- **Work mode is the centrepiece** — one large circular toggle, one unambiguous state.
-- **No contradictory messaging.** An earlier version showed "you are offline, requests will
-  not reach you" while simultaneously listing requests to accept. Pending requests are now
-  headed "awaiting your response" and explained as previously-sent and still open, while the
-  empty state tells an offline driver to go online.
-- **Stats row** — completed trips, active trips, rating.
-- **Active trip** takes priority above the request feed, with a single next action
-  (start trip → mark delivered).
-
-## Security notes
-
-- Passwords hashed by Django (PBKDF2); policy enforced server-side, not just in the UI.
-- OTPs are **hashed** at rest, single-use, expire in 10 minutes, capped at 5 attempts.
-- OTP and login endpoints are rate-limited (`THROTTLE_OTP`, `THROTTLE_LOGIN` env vars).
-- Login errors are deliberately generic, and password-reset responses are identical whether
-  or not the account exists, so neither endpoint reveals which emails are registered.
-- Marketplace listings hide plate numbers and carrier contact details.
-- Object-level checks on every accept/decline/cancel — you can only act on your own records.
-- Production hardening (HSTS, secure cookies, SSL redirect) activates when `DJANGO_DEBUG=False`.
-
-### Known advisory
-
-`npm audit` reports an advisory in `react-router` affecting **RSC mode**. This app is a
-client-side SPA and does not use RSC, so it is not exposed. Upgrade when a patched 7.x ships.
+**Layout** — solid white app bar, white cards on a light gray surface, green primary
+buttons, and a near-black footer with a gold rule, matching the page templates in the
+guide.
 
 ---
 
-## Not in this MVP
+## Frontend stack
 
-Vehicle-management UI for transporters (the API exists at `/api/vehicles/mine/`; seed data
-and the admin panel cover it for now), map-based location picking, in-app messaging,
-payments, push notifications, and Arabic translations of server-side validation messages.
+| Package | Why |
+|---|---|
+| `class-variance-authority` | Component variants live in one place, so colour and spacing stay consistent |
+| `clsx` + `tailwind-merge` | Predictable class merging — later classes reliably win |
+| `@tanstack/react-query` | Server-state caching, refetching, and the driver feed's live polling |
+| `sonner` | Toast notifications |
+| `lucide-react` | Icon set |
+| `@fontsource/ibm-plex-sans-arabic` | Self-hosted official typeface |
+
+---
+
+## Accessibility
+
+WCAG 2.1 AA is the conformance target named by the design system.
+
+- **Direction** — `<html dir>` and `lang` follow the active language; layout uses CSS
+  logical properties so it mirrors rather than being hand-flipped. The OTP field stays
+  LTR in both languages, and city pairs use `<bdi>` with explicit from/to labels so
+  mixed Arabic/Latin text never reorders confusingly.
+- **Forms** — every input has a real `<label>`; hints and errors are linked via
+  `aria-describedby`; invalid fields carry `aria-invalid`; grouped controls use
+  `<fieldset>` / `<legend>`.
+- **Feedback** — errors announce via `role="alert"`, status via `aria-live="polite"`.
+- **Keyboard** — visible 3px focus ring on every interactive element, plus a
+  skip-to-content link as the first tab stop.
+- **Contrast** — every text/background pair was measured programmatically; zero pairs
+  fall below AA.
+- **Motion** — animations respect `prefers-reduced-motion`.
+- **Responsive** — mobile-first; verified at 375px with no horizontal scroll.
+
+---
+
+## Testing
+
+The end-to-end flow has been exercised with Playwright against a running stack:
+
+- Sign-up → password-policy rejection → valid sign-up → OTP → role-based redirect
+- Shipper: cargo form validation, filtering, filter reset, capacity rejection, request sent
+- Transporter: online toggle, live feed, accept, trip `scheduled → in_transit`
+- Logout returns to the landing page; signed-in users cannot reach it
+- Arabic RTL with no untranslated strings; 375px mobile layout
+
+---
+
+## Security
+
+- Passwords hashed by Django (PBKDF2); the policy is enforced server-side, not just in the UI.
+- OTPs are **hashed at rest**, single-use, expire in 10 minutes, capped at 5 attempts.
+- OTP and login endpoints are rate-limited (`THROTTLE_OTP`, `THROTTLE_LOGIN`).
+- Login errors are deliberately generic, and password-reset responses are identical
+  whether or not the account exists, so neither endpoint reveals which emails are registered.
+- Marketplace listings hide plate numbers and carrier contact details.
+- Object-level checks on every accept / decline / cancel — you can only act on your own records.
+- Production hardening (HSTS, secure cookies, SSL redirect) activates when `DJANGO_DEBUG=False`.
+
+---
+
+## Roadmap
+
+Highest-value work not yet done:
+
+- `react-hook-form` + `zod` for client-side form validation before submit
+- Migrate the shipper and profile pages to React Query (still manual `useState`/`useEffect`)
+- Map-based pickup/drop-off selection instead of free-text cities
+- Real-time push (WebSocket) for the driver feed in place of polling
+- Ratings and payment settlement after delivery
+
+---
+
+## License
+
+Prototype — not yet licensed for production use.

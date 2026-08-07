@@ -23,3 +23,7 @@ playwright-report/
 
 # Local Claude Code settings
 .claude/settings.local.json
+
+# macOS duplicate artefacts ("models 2.py")
+* [0-9].*
+* [0-9]
