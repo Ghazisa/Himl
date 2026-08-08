@@ -8,6 +8,6 @@ pages_build_output_dir = "dist"
 compatibility_date = "2026-08-01"
 
 [vars]
-# The Render service that functions/api/[[path]].js proxies to.
-# ── CHANGE THIS to the real URL Render gives you after the first deploy. ──
+# The Render service that functions/api/[[path]].js proxies to. Confirmed live —
+# /healthz returns {"status": "ok"}. Update this if the service is ever renamed.
 BACKEND_ORIGIN = "https://himl-api.onrender.com"
