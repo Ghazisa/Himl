@@ -101,26 +101,27 @@ demo accounts on a deployment holding real data** — that password is published
 
 ---
 
-## Step 3 — Point the API back at Cloudflare
+## Step 3 — Nothing, and here is why
 
-The API refuses requests from unknown hosts. In the Render dashboard, under
-**Environment**, set:
+There is no third step. `DJANGO_ALLOWED_HOSTS` and `CORS_ALLOWED_ORIGINS` can stay empty,
+which is worth understanding rather than taking on trust.
 
-| Variable | Value |
-|---|---|
-| `DJANGO_ALLOWED_HOSTS` | the Worker hostname, e.g. `himl.<account>.workers.dev` |
-| `CORS_ALLOWED_ORIGINS` | the same with scheme, e.g. `https://himl.<account>.workers.dev` |
+The Worker proxies server-side, so the request Django actually receives carries
+`Host: himl-api.onrender.com` — never the Cloudflare hostname. That host is already
+trusted, because `settings.py` reads it from `RENDER_EXTERNAL_HOSTNAME`. And since the
+browser only ever calls a same-origin `/api` path, no cross-origin request is made at
+all, so CORS never enters the picture.
 
-Save — Render redeploys automatically. The Render hostname itself is trusted without
-configuration; `settings.py` reads it from `RENDER_EXTERNAL_HOSTNAME`.
+Set these two only if you later point a custom domain **directly** at Render, bypassing
+the Worker.
 
 ---
 
 ## Verifying a deployment
 
 ```bash
-curl -I https://<worker-url>/login                  # 200, SPA shell for a deep link
-curl https://<worker-url>/api/options/vehicles/     # 200, proxied to Render
+curl -I https://himl.gazi1zh.workers.dev/login                  # 200, SPA shell for a deep link
+curl https://himl.gazi1zh.workers.dev/api/options/vehicles/     # 200, proxied to Render
 ```
 
 The second must return readable JSON with **no** `Content-Encoding` header — a plain
