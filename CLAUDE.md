@@ -33,6 +33,45 @@ trip status advances. Also confirm logged-out users cannot reach protected route
   *after* React re-rendered. Capture state before the click.
 - **Seed data drifts from the docs.** If credentials are involved, verify the password in
   the README actually logs in.
+- **City search is case- and language-sensitive.** Seed data stores cities in English
+  (`Riyadh`), so searching `الرياض` returns zero results. Use English city names when
+  exercising the marketplace.
+
+## Deployment
+
+The app is split across two free tiers, and this is deliberate: **Cloudflare cannot run
+Django.** Workers execute JavaScript and WASM only, so the API lives elsewhere.
+
+```
+browser → Cloudflare Worker (SPA + /api proxy) → Render (Django + PostgreSQL)
+```
+
+Full instructions are in [DEPLOY.md](DEPLOY.md). Read it before touching anything under
+`frontend/worker/`, `frontend/wrangler.toml`, `render.yaml`, or `backend/build.sh`.
+
+### Known traps
+
+- **This is a Worker, not a Pages project.** Cloudflare's dashboard now creates Workers
+  by default. Pages-only constructs — a `functions/` directory, `pages_build_output_dir`,
+  `wrangler pages dev` — are silently ignored or rejected here. Use `[assets]` in
+  `wrangler.toml`, a `fetch` handler in `frontend/worker/index.js`, and `wrangler dev`.
+- **`run_worker_first = ["/api/*"]` is load-bearing.** `not_found_handling =
+  "single-page-application"` otherwise answers API calls with `index.html`, and the
+  Worker never runs. The symptom is JSON parse errors in the browser, not a 404.
+- **Never forward `Accept-Encoding` to the origin.** Doing so opts the fetch out of the
+  runtime's automatic compression handling, and clients that did not advertise brotli
+  receive an undecodable body. Verify with a plain `curl` (no `--compressed`).
+- **The Cloudflare build's Root directory must be `frontend`.** At the repository root
+  there is no `package.json`, so the build fails before it starts.
+- **`SEED_DEMO` must stay `false` on Render.** Left on, every deploy re-seeds and resets
+  passwords to the one published in the README.
+
+### Verifying a deployment change
+
+`wrangler dev` runs the real Cloudflare runtime locally. Point it at the deployed API
+rather than local Django, so the test covers the actual production path — this is how the
+`Accept-Encoding` defect above was found. Delete `frontend/.dev.vars` (git-ignored) to
+use the origin from `wrangler.toml`.
 
 ## Commands
 

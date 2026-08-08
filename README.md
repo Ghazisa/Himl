@@ -26,8 +26,8 @@ online/offline control, and a request feed that only polls while the driver is o
 > **Status:** working MVP. Runs entirely on a local machine — no cloud services,
 > paid accounts, or API keys required.
 
-To publish it instead, see **[DEPLOY.md](DEPLOY.md)** — the frontend goes to
-Cloudflare Pages and the API to Render, both on free tiers.
+To publish it instead, see **[DEPLOY.md](DEPLOY.md)** — the frontend goes to a
+Cloudflare Worker and the API to Render, both on free tiers.
 
 ---
 
