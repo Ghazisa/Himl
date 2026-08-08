@@ -1,0 +1,17 @@
+/*
+  X-Content-Type-Options: nosniff
+  X-Frame-Options: DENY
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: geolocation=(), camera=(), microphone=()
+  Strict-Transport-Security: max-age=31536000; includeSubDomains
+
+# Vite fingerprints these filenames, so they can be cached indefinitely.
+/assets/*
+  Cache-Control: public, max-age=31536000, immutable
+
+# The shell must never be cached, or a deploy leaves clients on stale bundles.
+# Both paths are listed because the app is served from "/" as well.
+/
+  Cache-Control: no-cache
+/index.html
+  Cache-Control: no-cache

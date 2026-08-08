@@ -1,0 +1,66 @@
+# Render blueprint for the Himl API and its database.
+#
+# The React frontend is NOT deployed here — it lives on Cloudflare Pages, which
+# reverse-proxies /api/* to this service. See DEPLOY.md.
+#
+# Apply with: Render dashboard → New → Blueprint → pick this repository.
+
+databases:
+  - name: himl-db
+    databaseName: himl
+    user: himl
+    plan: free
+    region: frankfurt
+
+services:
+  - type: web
+    name: himl-api
+    runtime: python
+    plan: free
+    region: frankfurt
+    rootDir: backend
+    buildCommand: "chmod +x build.sh && ./build.sh"
+    startCommand: "gunicorn config.wsgi:application --bind 0.0.0.0:$PORT --workers 2 --threads 4 --timeout 60 --access-logfile -"
+    healthCheckPath: /healthz
+    autoDeploy: true
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.12.7"
+
+      - key: DATABASE_URL
+        fromDatabase:
+          name: himl-db
+          property: connectionString
+
+      # Generated once by Render and kept out of the repository.
+      - key: DJANGO_SECRET_KEY
+        generateValue: true
+
+      - key: DJANGO_DEBUG
+        value: "false"
+
+      # The Render hostname is added automatically in settings.py. Set this to
+      # the Cloudflare Pages hostname once the frontend is deployed, e.g.
+      # "himl.pages.dev". Comma-separated.
+      - key: DJANGO_ALLOWED_HOSTS
+        sync: false
+
+      # Must include the Cloudflare Pages origin (scheme included), e.g.
+      # "https://himl.pages.dev". Also drives CSRF_TRUSTED_ORIGINS.
+      - key: CORS_ALLOWED_ORIGINS
+        sync: false
+
+      - key: DJANGO_TIME_ZONE
+        value: "Asia/Riyadh"
+
+      # Set to "true" for one deploy to load the demo shippers, transporters and
+      # vehicles, then set it back to "false".
+      - key: SEED_DEMO
+        value: "false"
+
+      # Left unset, Django prints OTP emails to the log, which is enough to
+      # demo the flow. Fill both to send real mail.
+      - key: EMAIL_HOST_USER
+        sync: false
+      - key: EMAIL_HOST_PASSWORD
+        sync: false
