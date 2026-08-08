@@ -1,13 +1,30 @@
-# Cloudflare Pages configuration for the Himl frontend.
+# Cloudflare Worker configuration for the Himl frontend.
 #
-# Set the Pages project's root directory to `frontend` in the dashboard; every
-# other build setting is read from this file.
+# This is a Worker with static assets, not a Pages project — Cloudflare now
+# creates Workers by default and the Pages-only `functions/` convention is not
+# supported here.
+#
+# In the dashboard, set the build's Root directory to `frontend`; the rest of
+# the configuration is read from this file.
 
 name = "himl"
-pages_build_output_dir = "dist"
+main = "worker/index.js"
 compatibility_date = "2026-08-01"
+compatibility_flags = ["nodejs_compat"]
+
+[assets]
+directory = "./dist"
+binding = "ASSETS"
+
+# React Router owns the URL space, so any path that is not a built asset has to
+# fall through to the app shell instead of returning a 404.
+not_found_handling = "single-page-application"
+
+# Without this, the SPA fallback above would swallow /api/* before the Worker
+# ever ran, and every API call would receive index.html.
+run_worker_first = ["/api/*"]
 
 [vars]
-# The Render service that functions/api/[[path]].js proxies to. Confirmed live —
-# /healthz returns {"status": "ok"}. Update this if the service is ever renamed.
+# The Render service that worker/index.js proxies to. Confirmed live —
+# /healthz returns {"status": "ok"}. Update this if the service is renamed.
 BACKEND_ORIGIN = "https://himl-api.onrender.com"
