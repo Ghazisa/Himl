@@ -193,7 +193,9 @@ JavaScript فقط. لذلك تُستضاف الواجهة على **Cloudflare Wo
 2. ضع الرابط في `BACKEND_ORIGIN` داخل `frontend/wrangler.toml` وارفع التعديل.
 3. اربط المستودع بـ Cloudflare، واجعل **المجلد الجذر `frontend`** وأمر البناء
    `npm run build` وأمر النشر `npx wrangler deploy`.
-4. أضف عنوان Worker إلى `DJANGO_ALLOWED_HOSTS` و `CORS_ALLOWED_ORIGINS` في Render.
+4. لا توجد خطوة رابعة. اترك `DJANGO_ALLOWED_HOSTS` و `CORS_ALLOWED_ORIGINS` فارغتين —
+   الوسيط يمرّر الطلب من جهة الخادم، فالعنوان الذي يصل Django هو
+   `himl-api.onrender.com` وهو موثوق تلقائياً، والمتصفح لا يرسل أي طلب عابر للنطاقات.
 
 **لتحميل الحسابات التجريبية:** اجعل `SEED_DEMO=true` في Render لنشرة واحدة فقط، ثم
 أعده إلى `false` — وإلا أعاد تصفير كلمات المرور مع كل نشر.
