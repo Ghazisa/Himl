@@ -7,6 +7,20 @@
       "runtimeArgs": ["run", "dev"],
       "cwd": "frontend",
       "port": 5173
+    },
+    {
+      "name": "himl-backend",
+      "runtimeExecutable": "uv",
+      "runtimeArgs": ["run", "python", "manage.py", "runserver", "8000"],
+      "cwd": "backend",
+      "port": 8000
+    },
+    {
+      "name": "himl-pages",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["wrangler", "pages", "dev", "--port", "8788"],
+      "cwd": "frontend",
+      "port": 8788
     }
   ]
 }

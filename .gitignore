@@ -8,9 +8,16 @@ staticfiles/
 # Secrets
 .env
 
+# Generated at deploy time from uv.lock by backend/build.sh
+backend/requirements.txt
+
 # Node
 node_modules/
 dist/
+
+# Cloudflare Wrangler local state and local-only Pages variables
+.wrangler/
+.dev.vars
 
 # OS
 .DS_Store
